@@ -1,0 +1,23 @@
+=== GET / ===
+Hello, Flask!
+Status: 200
+=== GET /items (empty) ===
+{"items":[]}
+
+Status: 200
+=== POST /items ===
+{"message":"Item added successfully"}
+
+Status: 201
+=== GET /items (after post) ===
+{"items":[{"name":"apple"}]}
+
+Status: 200
+=== GET /items/0 ===
+{"item":{"name":"apple"}}
+
+Status: 200
+=== GET /items/99 (not found) ===
+{"error":"Item not found"}
+
+Status: 404
