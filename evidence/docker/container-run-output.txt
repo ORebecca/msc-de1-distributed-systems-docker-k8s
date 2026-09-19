@@ -18,6 +18,6 @@ Status: 404
  * Debug mode: off
 === container user (non-root check) ===
 appuser
-uid=999(appuser) gid=999(appgroup) groups=999(appgroup)
+uid=100(appuser) gid=101(appgroup) groups=101(appgroup)
 === health status ===
-{"Status":"healthy","FailingStreak":0,"Log":[{"Start":"2026-09-19T10:16:58.801563167Z","End":"2026-09-19T10:16:59.113649053Z","ExitCode":0,"Output":""}]}
+{"Status":"healthy","FailingStreak":0,"Log":[{"Start":"2026-09-19T10:26:22.516787735Z","End":"2026-09-19T10:26:23.573021267Z","ExitCode":0,"Output":""}]}

@@ -1,29 +1,30 @@
 === docker images (size) ===
 IMAGE                                     ID             DISK USAGE   CONTENT SIZE   EXTRA
-rebecca16ouatt/msc-de1-flask-app:1.0.0    177af2ebb54f        198MB         48.2MB   U    
-rebecca16ouatt/msc-de1-flask-app:latest   177af2ebb54f        198MB         48.2MB   U    
+rebecca16ouatt/msc-de1-flask-app:1.0.0    0f6a1315a0ba       77.7MB         18.6MB   U    
+rebecca16ouatt/msc-de1-flask-app:latest   0f6a1315a0ba       77.7MB         18.6MB   U    
 === docker history (layers) ===
-IMAGE          CREATED              CREATED BY                                      SIZE      COMMENT
-177af2ebb54f   About a minute ago   CMD ["python" "run.py"]                         0B        buildkit.dockerfile.v0
-<missing>      About a minute ago   HEALTHCHECK &{["CMD-SHELL" "python -c \"impo…   0B        buildkit.dockerfile.v0
-<missing>      About a minute ago   EXPOSE [5000/tcp]                               0B        buildkit.dockerfile.v0
-<missing>      About a minute ago   USER appuser                                    0B        buildkit.dockerfile.v0
-<missing>      About a minute ago   RUN /bin/sh -c groupadd --system appgroup   …   65.5kB    buildkit.dockerfile.v0
-<missing>      About a minute ago   COPY run.py . # buildkit                        12.3kB    buildkit.dockerfile.v0
-<missing>      About a minute ago   COPY app/ ./app/ # buildkit                     20.5kB    buildkit.dockerfile.v0
-<missing>      About a minute ago   RUN /bin/sh -c pip install --no-cache-dir -r…   15.2MB    buildkit.dockerfile.v0
-<missing>      About a minute ago   COPY requirements.txt . # buildkit              12.3kB    buildkit.dockerfile.v0
-<missing>      About a minute ago   WORKDIR /app                                    8.19kB    buildkit.dockerfile.v0
-<missing>      9 hours ago          CMD ["python3"]                                 0B        buildkit.dockerfile.v0
-<missing>      9 hours ago          RUN /bin/sh -c set -eux;  for src in idle3 p…   16.4kB    buildkit.dockerfile.v0
-<missing>      9 hours ago          RUN /bin/sh -c set -eux;   savedAptMark="$(a…   41.4MB    buildkit.dockerfile.v0
-<missing>      9 hours ago          ENV PYTHON_SHA256=5c8462af5790baf43a321a1559…   0B        buildkit.dockerfile.v0
-<missing>      9 hours ago          ENV PYTHON_VERSION=3.12.14                      0B        buildkit.dockerfile.v0
-<missing>      9 hours ago          ENV GPG_KEY=7169605F62C751356D054A26A821E680…   0B        buildkit.dockerfile.v0
-<missing>      9 hours ago          RUN /bin/sh -c set -eux;  apt-get update;  a…   4.95MB    buildkit.dockerfile.v0
-<missing>      9 hours ago          ENV LANG=C.UTF-8                                0B        buildkit.dockerfile.v0
-<missing>      9 hours ago          ENV PATH=/usr/local/bin:/usr/local/sbin:/usr…   0B        buildkit.dockerfile.v0
-<missing>      34 hours ago         # debian.sh --arch 'amd64' out/ 'trixie' '@1…   87.6MB    debuerreotype 0.17
+IMAGE          CREATED         CREATED BY                                      SIZE      COMMENT
+0f6a1315a0ba   2 minutes ago   CMD ["python" "run.py"]                         0B        buildkit.dockerfile.v0
+<missing>      2 minutes ago   HEALTHCHECK &{["CMD-SHELL" "python -c \"impo…   0B        buildkit.dockerfile.v0
+<missing>      2 minutes ago   EXPOSE [5000/tcp]                               0B        buildkit.dockerfile.v0
+<missing>      2 minutes ago   USER appuser                                    0B        buildkit.dockerfile.v0
+<missing>      2 minutes ago   RUN /bin/sh -c addgroup -S appgroup     && a…   57.3kB    buildkit.dockerfile.v0
+<missing>      2 minutes ago   COPY run.py . # buildkit                        12.3kB    buildkit.dockerfile.v0
+<missing>      2 minutes ago   COPY app/ ./app/ # buildkit                     20.5kB    buildkit.dockerfile.v0
+<missing>      2 minutes ago   RUN /bin/sh -c pip install --no-cache-dir -r…   2.91MB    buildkit.dockerfile.v0
+<missing>      3 minutes ago   COPY requirements.txt . # buildkit              12.3kB    buildkit.dockerfile.v0
+<missing>      3 minutes ago   WORKDIR /app                                    8.19kB    buildkit.dockerfile.v0
+<missing>      37 hours ago    CMD ["python3"]                                 0B        buildkit.dockerfile.v0
+<missing>      37 hours ago    RUN /bin/sh -c set -eux;  for src in idle3 p…   16.4kB    buildkit.dockerfile.v0
+<missing>      37 hours ago    RUN /bin/sh -c set -eux;   apk add --no-cach…   44.1MB    buildkit.dockerfile.v0
+<missing>      37 hours ago    ENV PYTHON_SHA256=5c8462af5790baf43a321a1559…   0B        buildkit.dockerfile.v0
+<missing>      37 hours ago    ENV PYTHON_VERSION=3.12.14                      0B        buildkit.dockerfile.v0
+<missing>      37 hours ago    ENV GPG_KEY=7169605F62C751356D054A26A821E680…   0B        buildkit.dockerfile.v0
+<missing>      37 hours ago    RUN /bin/sh -c set -eux;  apk add --no-cache…   2.83MB    buildkit.dockerfile.v0
+<missing>      37 hours ago    ENV LANG=C.UTF-8                                0B        buildkit.dockerfile.v0
+<missing>      37 hours ago    ENV PATH=/usr/local/bin:/usr/local/sbin:/usr…   0B        buildkit.dockerfile.v0
+<missing>      38 hours ago    CMD ["/bin/sh"]                                 0B        buildkit.dockerfile.v0
+<missing>      38 hours ago    ADD alpine-minirootfs-3.24.2-x86_64.tar.gz /…   9.08MB    buildkit.dockerfile.v0
 === docker inspect (ports, user, config) ===
 Exposed Ports: map[5000/tcp:{}]
 User: appuser
