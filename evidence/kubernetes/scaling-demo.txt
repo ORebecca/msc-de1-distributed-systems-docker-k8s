@@ -1,0 +1,18 @@
+=== Scale to 3 replicas ===
+deployment.apps/msc-de1-flask-app scaled
+=== Pods at 3 replicas ===
+NAME                                 READY   STATUS    RESTARTS   AGE     IP           NODE              NOMINATED NODE   READINESS GATES
+msc-de1-flask-app-7dd9846dd7-j2cf8   1/1     Running   0          63s     10.244.2.3   msc-de1-worker2   <none>           <none>
+msc-de1-flask-app-7dd9846dd7-r5pjq   0/1     Running   0          6s      10.244.2.4   msc-de1-worker2   <none>           <none>
+msc-de1-flask-app-7dd9846dd7-sxvg6   1/1     Running   0          2m55s   10.244.1.2   msc-de1-worker    <none>           <none>
+NAME                READY   UP-TO-DATE   AVAILABLE   AGE
+msc-de1-flask-app   2/3     3            2           2m56s
+=== Scale back to 2 replicas ===
+deployment.apps/msc-de1-flask-app scaled
+=== Pods back at 2 replicas ===
+NAME                                 READY   STATUS        RESTARTS   AGE    IP           NODE              NOMINATED NODE   READINESS GATES
+msc-de1-flask-app-7dd9846dd7-j2cf8   1/1     Running       0          69s    10.244.2.3   msc-de1-worker2   <none>           <none>
+msc-de1-flask-app-7dd9846dd7-r5pjq   0/1     Terminating   0          12s    10.244.2.4   msc-de1-worker2   <none>           <none>
+msc-de1-flask-app-7dd9846dd7-sxvg6   1/1     Running       0          3m1s   10.244.1.2   msc-de1-worker    <none>           <none>
+NAME                READY   UP-TO-DATE   AVAILABLE   AGE
+msc-de1-flask-app   2/2     2            2           3m2s

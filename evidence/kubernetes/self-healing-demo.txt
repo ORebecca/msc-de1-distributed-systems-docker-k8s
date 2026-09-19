@@ -1,0 +1,14 @@
+=== Pods before deletion ===
+NAME                                 READY   STATUS    RESTARTS   AGE    IP           NODE              NOMINATED NODE   READINESS GATES
+msc-de1-flask-app-7dd9846dd7-54kk6   1/1     Running   0          113s   10.244.2.2   msc-de1-worker2   <none>           <none>
+msc-de1-flask-app-7dd9846dd7-sxvg6   1/1     Running   0          112s   10.244.1.2   msc-de1-worker    <none>           <none>
+Deleting pod: msc-de1-flask-app-7dd9846dd7-54kk6
+pod "msc-de1-flask-app-7dd9846dd7-54kk6" deleted from msc-de1-project namespace
+=== Pods immediately after deletion ===
+NAME                                 READY   STATUS    RESTARTS   AGE     IP           NODE              NOMINATED NODE   READINESS GATES
+msc-de1-flask-app-7dd9846dd7-j2cf8   1/1     Running   0          33s     10.244.2.3   msc-de1-worker2   <none>           <none>
+msc-de1-flask-app-7dd9846dd7-sxvg6   1/1     Running   0          2m25s   10.244.1.2   msc-de1-worker    <none>           <none>
+=== Pods after self-healing (new replacement pod created) ===
+NAME                                 READY   STATUS    RESTARTS   AGE     IP           NODE              NOMINATED NODE   READINESS GATES
+msc-de1-flask-app-7dd9846dd7-j2cf8   1/1     Running   0          42s     10.244.2.3   msc-de1-worker2   <none>           <none>
+msc-de1-flask-app-7dd9846dd7-sxvg6   1/1     Running   0          2m34s   10.244.1.2   msc-de1-worker    <none>           <none>
