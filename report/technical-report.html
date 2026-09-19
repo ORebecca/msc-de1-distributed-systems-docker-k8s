@@ -64,6 +64,13 @@
     font-size: 10pt;
   }
   footer { margin-top: 24pt; font-size: 8.5pt; color: #777; text-align: center; }
+  figure { margin: 10pt 0; page-break-inside: avoid; }
+  figure img {
+    width: 100%;
+    border: 1px solid #d8dee4;
+    border-radius: 4px;
+  }
+  figcaption { font-size: 8.5pt; color: #666; margin-top: 3pt; text-align: center; }
 </style>
 </head>
 <body>
@@ -77,6 +84,11 @@
   <tr><td>Docker Hub image</td><td><code>rebecca16ouatt/msc-de1-flask-app</code>, tags <code>1.0.0</code> (deployed), <code>latest</code>, <code>1.1.0</code> (demo only)</td></tr>
   <tr><td>Local cluster</td><td><code>kind</code>, 1 control-plane + 2 workers, namespace <code>msc-de1-project</code></td></tr>
 </table>
+
+<figure>
+  <img src="screenshots/github.png" alt="GitHub repository page showing the project structure and commit history">
+  <figcaption>The public GitHub repository: file structure and 17 incremental commits.</figcaption>
+</figure>
 
 <h2>1. Baseline</h2>
 <p>Before touching Docker at all, I ran the original app as-is to make sure it actually
@@ -160,6 +172,16 @@ rolling-update demo in section 6.</p>
 <p>To make sure publishing actually worked and wasn't just a local artifact, I removed the
 local image entirely, pulled it back from Docker Hub, ran it, and re-tested every route against
 that freshly-pulled copy. Same results as before.</p>
+
+<figure>
+  <img src="screenshots/dockerhub.png" alt="Docker Hub page for rebecca16ouatt/msc-de1-flask-app showing the published image">
+  <figcaption>Public Docker Hub repository, 17.7MB compressed image, pull command shown.</figcaption>
+</figure>
+
+<pre>$ docker images rebecca16ouatt/msc-de1-flask-app
+IMAGE                                    ID             DISK USAGE   CONTENT SIZE
+rebecca16ouatt/msc-de1-flask-app:1.0.0   0f6a1315a0ba   77.7MB       18.6MB
+rebecca16ouatt/msc-de1-flask-app:1.1.0   3b753e325dd0   77.7MB       18.6MB</pre>
 
 <h2>5. Kubernetes</h2>
 <h3>Cluster</h3>
