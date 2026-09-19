@@ -1,0 +1,8 @@
+Hello, Flask!
+Status: 200
+{"message":"Item added successfully"}
+
+Status: 201
+{"items":[{"name":"k8s-item"}]}
+
+Status: 200

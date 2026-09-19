@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: msc-de1-flask-app-config
+  namespace: msc-de1-project
+  labels:
+    app.kubernetes.io/name: msc-de1-flask-app
+data:
+  # Non-sensitive runtime configuration, externalized instead of being
+  # hard-coded in the image or the Deployment spec. Matches the PORT
+  # env var read by run.py.
+  PORT: "5000"

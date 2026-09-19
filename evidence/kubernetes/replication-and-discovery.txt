@@ -1,0 +1,18 @@
+=== Pods (replication + scheduling across nodes) ===
+NAME                                 READY   STATUS    RESTARTS   AGE   IP           NODE              NOMINATED NODE   READINESS GATES
+msc-de1-flask-app-7dd9846dd7-54kk6   1/1     Running   0          89s   10.244.2.2   msc-de1-worker2   <none>           <none>
+msc-de1-flask-app-7dd9846dd7-sxvg6   1/1     Running   0          88s   10.244.1.2   msc-de1-worker    <none>           <none>
+=== Deployment ===
+NAME                READY   UP-TO-DATE   AVAILABLE   AGE   CONTAINERS          IMAGES                                   SELECTOR
+msc-de1-flask-app   2/2     2            2           89s   msc-de1-flask-app   rebecca16ouatt/msc-de1-flask-app:1.0.0   app.kubernetes.io/name=msc-de1-flask-app
+=== Service ===
+NAME                TYPE        CLUSTER-IP   EXTERNAL-IP   PORT(S)   AGE
+msc-de1-flask-app   ClusterIP   10.96.90.3   <none>        80/TCP    89s
+=== Endpoints (service discovery) ===
+NAME                ENDPOINTS                         AGE
+msc-de1-flask-app   10.244.1.2:5000,10.244.2.2:5000   88s
+=== Security context verification ===
+uid=100(appuser) gid=101(appgroup) groups=101(appgroup)
+=== NetworkPolicy ===
+NAME                       POD-SELECTOR                               AGE
+msc-de1-flask-app-netpol   app.kubernetes.io/name=msc-de1-flask-app   89s

@@ -1,0 +1,34 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: msc-de1-flask-app-netpol
+  namespace: msc-de1-project
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: msc-de1-flask-app
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Only allow traffic to the app on its service port, and only from
+    # other pods inside this namespace (e.g. the Service/kube-proxy path
+    # and any future intra-namespace clients). kubectl port-forward talks
+    # directly to the kubelet and is not affected by this policy.
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: msc-de1-project
+      ports:
+        - protocol: TCP
+          port: 5000
+  egress:
+    # The app makes no outbound calls of its own; only allow DNS so the
+    # pod can still resolve names if needed.
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
