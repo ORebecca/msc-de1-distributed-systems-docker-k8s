@@ -23,6 +23,7 @@ tests/
 # Project docs, evidence and security reports not needed at runtime
 evidence/
 security/
+report/
 *.md
 LICENSE
 
