@@ -69,178 +69,165 @@
 <body>
 
 <h1>Distributed Systems — Docker &amp; Local Kubernetes Project</h1>
-<p class="subtitle">Technical Report — MSc DE1 — Containerization, Security and Orchestration of the UBC Flask Sample App</p>
+<p class="subtitle">Technical Report — MSc DE1 — Rebecca Ouattara</p>
 
 <table class="meta-table">
   <tr><td>Starter application</td><td><code>https://github.com/ubc/flask-sample-app</code></td></tr>
   <tr><td>Repository</td><td><code>https://github.com/ORebecca/msc-de1-distributed-systems-docker-k8s</code></td></tr>
-  <tr><td>Docker Hub image</td><td><code>rebecca16ouatt/msc-de1-flask-app</code> — tags <code>1.0.0</code> (deployed), <code>latest</code>, <code>1.1.0</code> (demo)</td></tr>
-  <tr><td>Local cluster</td><td><code>kind</code> — 1 control-plane + 2 workers, namespace <code>msc-de1-project</code></td></tr>
+  <tr><td>Docker Hub image</td><td><code>rebecca16ouatt/msc-de1-flask-app</code>, tags <code>1.0.0</code> (deployed), <code>latest</code>, <code>1.1.0</code> (demo only)</td></tr>
+  <tr><td>Local cluster</td><td><code>kind</code>, 1 control-plane + 2 workers, namespace <code>msc-de1-project</code></td></tr>
 </table>
 
 <h2>1. Baseline</h2>
-<p>Before any containerization work, the original, unmodified application was run locally
-in a Python 3.14 virtual environment to establish a working baseline:</p>
-<ol>
-  <li>Created a venv and installed <code>requirements.txt</code> (<code>flask==2.3.3</code>).</li>
-  <li>Ran <code>python -m unittest discover tests</code> — all 4 existing unit tests passed
-      (<code>test_hello_route</code>, <code>test_add_item_route</code>, <code>test_get_item_route</code>,
-      <code>test_get_nonexistent_item_route</code>).</li>
-  <li>Ran <code>python run.py</code> and exercised every documented route with <code>curl</code>:
-      <code>GET /</code> (200), <code>GET /items</code> (200), <code>POST /items</code> (201),
-      <code>GET /items/&lt;id&gt;</code> (200 / 404 for a missing id).</li>
-</ol>
-<p>All routes behaved exactly as documented in the starter README. Raw command output is
-saved under <code>evidence/baseline/</code> in the repository.</p>
+<p>Before touching Docker at all, I ran the original app as-is to make sure it actually
+worked and to have something to compare the containerized version against later.</p>
+<p>Steps: created a venv, installed <code>requirements.txt</code> (just <code>flask==2.3.3</code>),
+ran <code>python -m unittest discover tests</code> — the 4 existing tests all passed
+(<code>test_hello_route</code>, <code>test_add_item_route</code>, <code>test_get_item_route</code>,
+<code>test_get_nonexistent_item_route</code>) — then started the app with <code>python run.py</code>
+and hit every route with curl: <code>GET /</code> (200), <code>GET /items</code> (200),
+<code>POST /items</code> (201), <code>GET /items/&lt;id&gt;</code> (200, or 404 for an id that
+doesn't exist). Everything matched what the starter README said it should do. Raw output is
+in <code>evidence/baseline/</code> if you want to check it.</p>
 
 <h2>2. Dockerization</h2>
-<p>The Dockerfile was written from scratch, addressing all 12 mandatory practices from the
-assignment brief: an official Python base image, a <code>WORKDIR</code>, dependency-first
-copying for layer caching, no unnecessary caches/files, a non-root runtime user, a single
-exposed port, exec-form <code>CMD</code>, and a <code>HEALTHCHECK</code>.</p>
+<p>I wrote the Dockerfile myself, trying to hit every point on the assignment's checklist: an
+official Python base image, a proper <code>WORKDIR</code>, copying dependencies before the app
+source so Docker can cache that layer, no leftover caches, a non-root user, one exposed port,
+exec-form <code>CMD</code>, a <code>HEALTHCHECK</code>.</p>
 
-<h3>Base image choice</h3>
-<p>The first working version used <code>python:3.12-slim</code> (Debian-based). A Trivy scan
-of that image reported <strong>150 vulnerabilities, 44 of them HIGH</strong>, almost entirely
-in Debian OS packages unrelated to the application (<code>util-linux</code>, <code>login</code>,
-<code>perl-base</code>, <code>bsdutils</code>, etc.), none of which had an available fix yet.
-Switching the base image to <code>python:3.12-alpine</code> eliminated every OS-level finding
-(<strong>0 vulnerabilities</strong> on the Alpine layer itself) and reduced the final image size
-from <strong>~198MB to ~78MB</strong>. <code>pip</code>, <code>setuptools</code> and
-<code>wheel</code> were also removed after the dependency install, since they are build-time
-tools only and were themselves being flagged by the scanner — bringing the image down further
-to its final size.</p>
+<h3>Why I switched base images</h3>
+<p>My first version used <code>python:3.12-slim</code> (Debian). It worked fine, but when I ran
+it through Trivy the results weren't great: <strong>150 vulnerabilities, 44 of them HIGH</strong>,
+almost all in Debian OS packages this app never even touches — things like
+<code>util-linux</code>, <code>login</code>, <code>perl-base</code>. None of them had a fix
+available yet either, so patching wasn't really an option. Switching the base to
+<code>python:3.12-alpine</code> got the OS-level findings to <strong>zero</strong> and dropped
+the image from <strong>~198MB to ~78MB</strong> in the process. I also removed <code>pip</code>,
+<code>setuptools</code> and <code>wheel</code> after installing the dependencies, since they're
+only needed at build time and Trivy was flagging vulnerabilities in those too.</p>
 
-<h3>Non-root execution</h3>
-<p>The image creates a dedicated system user/group (<code>appuser</code>/<code>appgroup</code>,
-uid 100 / gid 101 on Alpine) and switches to it with <code>USER appuser</code> before the
-application ever runs. Confirmed via <code>docker exec ... id</code> →
-<code>uid=100(appuser) gid=101(appgroup)</code>.</p>
+<h3>Non-root</h3>
+<p>The image creates its own system user (<code>appuser</code>/<code>appgroup</code>, which end
+up as uid 100 / gid 101 on Alpine) and switches to it before the app starts. I checked this with
+<code>docker exec ... id</code>, which comes back as <code>uid=100(appuser)
+gid=101(appgroup)</code> — confirmed not root.</p>
 
-<h3>Local verification</h3>
-<p><code>docker build</code>, <code>docker run</code>, all routes tested from the host,
-<code>docker logs</code> showing request traffic, <code>docker inspect</code> confirming the
-non-root user and the single exposed port (5000/tcp), and a clean
-<code>docker stop</code>/<code>docker rm</code>. <code>docker compose up</code> was also
-verified, with the container additionally hardened for local testing:
-<code>read_only: true</code> root filesystem (backed by a <code>tmpfs</code> mount for
-<code>/tmp</code>), <code>cap_drop: [ALL]</code>, and <code>no-new-privileges:true</code>.
-No <code>privileged</code> mode, no Docker socket mount, and no host networking are used
-anywhere.</p>
+<h3>What I actually tested</h3>
+<p><code>docker build</code>, <code>docker run</code>, hit every route from the host, checked
+<code>docker logs</code> for the request traffic, used <code>docker inspect</code> to confirm
+the non-root user and that only port 5000 is exposed, then a clean
+<code>stop</code>/<code>rm</code>. I did the same with <code>docker compose up</code>, and
+hardened that one a bit further for local testing: read-only root filesystem (with a
+<code>tmpfs</code> for <code>/tmp</code>), all capabilities dropped, and
+<code>no-new-privileges</code>. Nowhere in the setup is there a privileged container, a
+mounted Docker socket, or host networking.</p>
 
 <h2>3. Security</h2>
 <h3>Vulnerability scan</h3>
 <table>
   <tr><th>Tool</th><td>Trivy 0.74.0</td></tr>
-  <tr><th>Image scanned</th><td><code>rebecca16ouatt/msc-de1-flask-app:1.0.0</code> (final, Alpine-based)</td></tr>
-  <tr><th>Findings by severity</th><td>CRITICAL: 0 · HIGH: 0 · MEDIUM: 0 · LOW: 1</td></tr>
-  <tr><th>Changes made after scanning</th><td>Switched base image Debian→Alpine (removed 150 OS findings); removed pip/setuptools/wheel post-install (removed their own findings)</td></tr>
-  <tr><th>Remaining findings</th><td><code>CVE-2026-27205</code> (LOW) — Flask 2.3.3 information disclosure via improper session-data caching. No fix applied because it would require bumping Flask beyond the version pinned by the starter project's <code>requirements.txt</code>, and it is not exploitable here: the application never sets or reads Flask sessions/cookies, so the vulnerable code path is unreachable.</td></tr>
+  <tr><th>Image scanned</th><td><code>rebecca16ouatt/msc-de1-flask-app:1.0.0</code> (the Alpine version, final)</td></tr>
+  <tr><th>Findings by severity</th><td>CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 1</td></tr>
+  <tr><th>What changed after scanning</th><td>Debian → Alpine base (dropped 150 OS findings); removed pip/setuptools/wheel post-install (dropped their findings too)</td></tr>
+  <tr><th>What's left</th><td><code>CVE-2026-27205</code> (LOW): a Flask 2.3.3 issue around improper session-data caching leading to information disclosure. I didn't patch it because doing so would mean bumping Flask past the version the starter project pins in <code>requirements.txt</code>, and honestly it doesn't apply here anyway — this app never sets or reads Flask sessions or cookies, so that code path never runs.</td></tr>
 </table>
-<p>Full output: <code>security/vulnerability-scan.txt</code>.</p>
+<p>Full scan output is saved as <code>security/vulnerability-scan.txt</code>.</p>
 
-<h3>Software Bill of Materials</h3>
-<p>Generated with Syft 1.51.0 in CycloneDX 1.7 JSON format
-(<code>security/sbom.cdx.json</code>), listing 938 components — every OS package and Python
-dependency present in the final image.</p>
+<h3>SBOM</h3>
+<p>Generated with Syft 1.51.0, CycloneDX 1.7 JSON format
+(<code>security/sbom.cdx.json</code>) — 938 components covering every OS package and Python
+dependency actually present in the image.</p>
 
-<h3>Other hardening measures</h3>
+<h3>Other things I locked down</h3>
 <ul>
-  <li><strong>Reduced privileges</strong>: <code>allowPrivilegeEscalation: false</code> and
-      <code>capabilities.drop: [ALL]</code> in Kubernetes; <code>cap_drop: [ALL]</code> and
-      <code>no-new-privileges:true</code> in Compose.</li>
-  <li><strong>Read-only root filesystem</strong>: enabled in both Compose and Kubernetes, with
-      an <code>emptyDir</code>/<code>tmpfs</code> mount for <code>/tmp</code> — verified the
-      application still starts, becomes healthy, and serves all routes correctly.</li>
-  <li><strong>Resource awareness</strong>: CPU/memory <code>requests</code> and
-      <code>limits</code> set on the Kubernetes Deployment so the app cannot consume unbounded
-      cluster resources.</li>
-  <li><strong>No secrets in the image</strong>: no credentials appear in the Dockerfile,
-      image layers, or any committed file; the app requires none.</li>
+  <li><code>allowPrivilegeEscalation: false</code> and all capabilities dropped in Kubernetes;
+      same idea (<code>cap_drop: [ALL]</code>, <code>no-new-privileges</code>) in Compose.</li>
+  <li>Read-only root filesystem in both Compose and Kubernetes — I checked that the app still
+      starts, passes its health check, and serves every route fine with an <code>emptyDir</code>/
+      <code>tmpfs</code> for <code>/tmp</code>.</li>
+  <li>CPU/memory requests and limits on the Deployment, so a misbehaving pod can't eat the whole
+      cluster's resources.</li>
+  <li>No credentials anywhere in the Dockerfile, image layers, or repo — the app doesn't need
+      any.</li>
 </ul>
 
 <h2>4. Docker Hub</h2>
-<p>Public repository: <code>https://hub.docker.com/r/rebecca16ouatt/msc-de1-flask-app</code>.
-Two tags were pushed for the final image — <code>1.0.0</code> (the exact version used by the
-Kubernetes Deployment) and <code>latest</code> — plus a separate <code>1.1.0</code> tag built
-later purely for the rolling-update demonstration in §6.</p>
-<p>Publication was verified end-to-end: the local image was removed
-(<code>docker rmi</code>), pulled back down fresh from Docker Hub
-(<code>docker pull rebecca16ouatt/msc-de1-flask-app:1.0.0</code>), run, and all routes were
-re-tested successfully against the freshly-pulled image.</p>
+<p>Repo: <code>https://hub.docker.com/r/rebecca16ouatt/msc-de1-flask-app</code>. I pushed
+<code>1.0.0</code> (the exact version the Kubernetes Deployment uses) and <code>latest</code>
+for the final image, plus a separate <code>1.1.0</code> built later just for the
+rolling-update demo in section 6.</p>
+<p>To make sure publishing actually worked and wasn't just a local artifact, I removed the
+local image entirely, pulled it back from Docker Hub, ran it, and re-tested every route against
+that freshly-pulled copy. Same results as before.</p>
 
 <h2>5. Kubernetes</h2>
-<h3>Cluster architecture</h3>
-<p>A local <code>kind</code> cluster (<code>kind/kind-config.yaml</code>) with
-<strong>1 control-plane node and 2 worker nodes</strong>, all reaching <code>Ready</code>
-status.</p>
+<h3>Cluster</h3>
+<p>Local <code>kind</code> cluster defined in <code>kind/kind-config.yaml</code>: 1
+control-plane node, 2 worker nodes, all came up <code>Ready</code>.</p>
 
-<h3>Deployed objects (namespace <code>msc-de1-project</code>)</h3>
+<h3>What's deployed, in the <code>msc-de1-project</code> namespace</h3>
 <table>
-  <tr><th>Object</th><th>Purpose</th></tr>
-  <tr><td>Namespace</td><td>Isolates all project resources under <code>msc-de1-project</code>.</td></tr>
-  <tr><td>ConfigMap</td><td>Externalizes the non-sensitive <code>PORT</code> setting instead of hard-coding it.</td></tr>
-  <tr><td>Deployment</td><td>2 replicas, image <code>rebecca16ouatt/msc-de1-flask-app:1.0.0</code>, explicit container port 5000, readiness &amp; liveness probes on <code>GET /</code>, CPU/memory requests (50m/64Mi) and limits (250m/128Mi), <code>RollingUpdate</code> strategy (<code>maxSurge: 1</code>, <code>maxUnavailable: 0</code>), and a full <code>securityContext</code>: <code>runAsNonRoot: true</code>, <code>runAsUser: 100</code>, <code>runAsGroup: 101</code> (matching the image), <code>allowPrivilegeEscalation: false</code>, <code>capabilities.drop: [ALL]</code>, <code>seccompProfile: RuntimeDefault</code>, <code>readOnlyRootFilesystem: true</code> (with an <code>emptyDir</code> for <code>/tmp</code>).</td></tr>
-  <tr><td>Service</td><td>ClusterIP, selects the Deployment's pods, port 80 → 5000.</td></tr>
-  <tr><td>NetworkPolicy</td><td>Restricts ingress to the app's port to traffic originating from within the same namespace, and egress to DNS only.</td></tr>
+  <tr><th>Object</th><th>What it does</th></tr>
+  <tr><td>Namespace</td><td>Keeps everything for this project grouped together.</td></tr>
+  <tr><td>ConfigMap</td><td>Holds the <code>PORT</code> value instead of hard-coding it anywhere.</td></tr>
+  <tr><td>Deployment</td><td>2 replicas of <code>rebecca16ouatt/msc-de1-flask-app:1.0.0</code>, container port 5000 declared explicitly, readiness and liveness probes hitting <code>GET /</code>, CPU/memory requests (50m/64Mi) and limits (250m/128Mi), a <code>RollingUpdate</code> strategy with <code>maxSurge: 1</code> / <code>maxUnavailable: 0</code>, and a securityContext covering <code>runAsNonRoot</code>, the exact uid/gid the image uses (100/101), <code>allowPrivilegeEscalation: false</code>, dropped capabilities, <code>seccompProfile: RuntimeDefault</code>, and a read-only root filesystem (with an <code>emptyDir</code> for <code>/tmp</code>).</td></tr>
+  <tr><td>Service</td><td>ClusterIP, routes port 80 to the pods' port 5000.</td></tr>
+  <tr><td>NetworkPolicy</td><td>Only allows ingress to the app from inside the same namespace, and egress limited to DNS.</td></tr>
 </table>
 <div class="warn">
-<strong>Known limitation:</strong> kind's default CNI (kindnet) does not enforce
-NetworkPolicy. The policy correctly documents the intended access model, but is not actively
-enforced without installing a policy-aware CNI such as Calico or Cilium — out of scope for
-this project's timeline.
+One thing worth flagging honestly: kind's default networking (kindnet) doesn't actually
+enforce NetworkPolicy. The policy documents what access should be allowed, but without a
+policy-aware CNI like Calico or Cilium installed on top, it's not actively blocking anything.
+I didn't have time to add that given the project deadline, so I'm noting it here instead.
 </div>
 
 <h2>6. Distributed behavior</h2>
-<h3>Replication &amp; service discovery</h3>
-<p>Both pods reached <code>Running</code>/<code>Ready</code> and were scheduled onto the two
-different worker nodes (<code>msc-de1-worker</code> and <code>msc-de1-worker2</code>).
-<code>kubectl get endpoints</code> listed both pod IPs behind the Service, and the API was
-successfully reached through the Service via <code>kubectl port-forward</code>.</p>
+<h3>Replication and service discovery</h3>
+<p>Both pods came up <code>Running</code>/<code>Ready</code>, scheduled on the two different
+worker nodes. <code>kubectl get endpoints</code> showed both pod IPs behind the Service, and I
+could reach the API through the Service via <code>kubectl port-forward</code>.</p>
 
 <h3>Self-healing</h3>
-<p>One running pod was deleted manually (<code>kubectl delete pod ...</code>). The Deployment
-controller detected the discrepancy between desired state (2 replicas) and observed state
-(1 replica) and created a replacement pod within seconds — no manual intervention required.
-This is <strong>desired-state reconciliation</strong>: the Deployment/ReplicaSet controller
-continuously compares the cluster's actual state to the spec and drives convergence, which is
-fundamentally different from a plain <code>docker run</code> container, which stays dead once
-it exits.</p>
+<p>I deleted one running pod on purpose (<code>kubectl delete pod ...</code>) to see what would
+happen. Within a few seconds the Deployment had already created a replacement — nothing I had
+to trigger manually. That's the desired-state reconciliation loop at work: the controller keeps
+comparing what's actually running against what the spec says should be running, and fixes the
+difference on its own. A plain <code>docker run</code> container obviously doesn't do that; once
+it's dead, it's dead.</p>
 
 <h3>Scaling</h3>
 <p><code>kubectl scale deployment msc-de1-flask-app --replicas=3</code> brought up a third pod
-on an available worker node; the Deployment reported <code>3/3</code> available shortly after.
-Scaling back to <code>--replicas=2</code> cleanly terminated the extra pod.</p>
+without any other changes; the Deployment reported 3/3 shortly after. Scaling back down to 2
+cleanly removed the extra one.</p>
 
-<h3>Rolling update &amp; rollback</h3>
-<p>A small, visible version marker was added to the <code>/</code> route
-(<code>"Hello, Flask! (v1.1.0)"</code>), the matching unit test was updated, and the image was
-rebuilt and pushed as <code>1.1.0</code>. <code>kubectl set image
-deployment/msc-de1-flask-app msc-de1-flask-app=...:1.1.0</code> triggered a rolling update:
-<code>kubectl rollout status</code> showed pods being replaced one at a time
-(<code>maxUnavailable: 0</code> kept the app continuously available), and
-<code>kubectl rollout history</code> recorded the new revision. The Service immediately began
-returning the updated text. <code>kubectl rollout undo</code> then rolled the Deployment back
-to the previous revision; both pods returned to image <code>1.0.0</code> and the API's
-response reverted to the original text, confirming a clean rollback.</p>
+<h3>Rolling update and rollback</h3>
+<p>For this part I made a small, visible change — the <code>/</code> route now says
+<code>"Hello, Flask! (v1.1.0)"</code> — updated the matching test, rebuilt, and pushed the image
+as <code>1.1.0</code>. Then I ran <code>kubectl set image
+deployment/msc-de1-flask-app msc-de1-flask-app=...:1.1.0</code>, watched
+<code>kubectl rollout status</code> replace the pods one at a time (the app stayed available
+throughout, since <code>maxUnavailable: 0</code>), and checked <code>kubectl rollout
+history</code> to see the new revision recorded. The Service started returning the new text
+right away. To finish the demo, <code>kubectl rollout undo</code> brought it back to the
+previous revision — both pods ended up back on <code>1.0.0</code>, and the API's response
+reverted to the original text.</p>
 
 <h2>7. Conclusion</h2>
-<p>This project required treating the same small Flask application through four different
-lenses — a bare local process, a Docker container, a Compose service, and a Kubernetes
-workload — and hardening it consistently at every layer rather than only at the edges. The
-most concrete lesson was how much a base-image choice affects the security surface: switching
-from a Debian-slim to an Alpine base collapsed the vulnerability count from 150 (44 HIGH) to
-a single LOW finding, for less effort than patching individual OS packages one by one. The
-project also made the practical difference between a container and a Kubernetes-managed
-workload tangible rather than theoretical: watching a Deployment recreate a manually deleted
-pod, or keep the API available throughout a rolling update because of
-<code>maxUnavailable: 0</code>, demonstrates desired-state reconciliation and controlled
-rollout far more convincingly than reading about them.</p>
-<p><strong>One improvement for a real production deployment:</strong> replace Flask's built-in
-development server (which the app currently uses, and which explicitly warns against
-production use) with a production WSGI server such as Gunicorn behind the same container and
-Kubernetes setup, and pair it with an Ingress controller and TLS termination instead of relying
-on <code>kubectl port-forward</code> for access.</p>
+<p>Doing this project meant dealing with the same small app in four different forms — a bare
+process, a Docker container, a Compose service, a Kubernetes workload — and trying to keep the
+security posture consistent across all of them instead of only hardening the parts that were
+easiest. The clearest lesson for me was just how much the base image choice matters: swapping
+Debian-slim for Alpine took the vulnerability count from 150 (44 HIGH) down to a single LOW
+finding, and that was a lot less effort than trying to patch individual OS packages one by one.
+Watching the self-healing and rolling-update demos actually run also made the theory click in a
+way reading about it hadn't — seeing a pod get killed and silently replaced, or watching the API
+stay reachable the entire time an update rolled out because of <code>maxUnavailable: 0</code>,
+made "desired state" feel like something concrete instead of a term from a slide.</p>
+<p>If I were taking this toward an actual production deployment, the first thing I'd change is
+the web server: Flask's built-in dev server is still what's running inside the container, and
+it says outright it isn't meant for production. I'd put something like Gunicorn behind it, and
+add a real Ingress with TLS instead of relying on <code>kubectl port-forward</code> for access.</p>
 
 <footer>MSc DE1 — Distributed Systems — Docker &amp; Local Kubernetes Project</footer>
 
