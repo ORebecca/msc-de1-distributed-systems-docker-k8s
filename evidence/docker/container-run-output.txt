@@ -1,0 +1,23 @@
+=== Routes from host ===
+Hello, Flask!
+Status: 200
+{"message":"Item added successfully"}
+
+Status: 201
+{"items":[{"name":"banana"}]}
+
+Status: 200
+{"item":{"name":"banana"}}
+
+Status: 200
+{"error":"Item not found"}
+
+Status: 404
+=== docker logs ===
+ * Serving Flask app 'app'
+ * Debug mode: off
+=== container user (non-root check) ===
+appuser
+uid=999(appuser) gid=999(appgroup) groups=999(appgroup)
+=== health status ===
+{"Status":"healthy","FailingStreak":0,"Log":[{"Start":"2026-09-19T10:16:58.801563167Z","End":"2026-09-19T10:16:59.113649053Z","ExitCode":0,"Output":""}]}

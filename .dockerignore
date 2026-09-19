@@ -1,0 +1,34 @@
+# Git metadata
+.git/
+.gitignore
+
+# Python virtual environments and caches
+venv/
+__pycache__/
+**/__pycache__/
+*.pyc
+.pytest_cache/
+
+# IDE files
+.vscode/
+.idea/
+
+# Local secrets / env files
+.env
+*.env.local
+
+# Tests and non-runtime artifacts
+tests/
+
+# Project docs, evidence and security reports not needed at runtime
+evidence/
+security/
+*.md
+LICENSE
+
+# Kubernetes / kind / compose files not needed inside the image
+kind/
+k8s/
+compose.yaml
+Dockerfile
+.dockerignore
