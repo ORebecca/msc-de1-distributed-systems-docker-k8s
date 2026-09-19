@@ -1,4 +1,4 @@
-# MSc DE1 — Distributed Systems: Docker & Local Kubernetes Project
+# MSc DE1: Distributed Systems Docker & Local Kubernetes Project
 
 This repo contains my work for the Distributed Systems Docker/Kubernetes project: I took
 the [UBC Flask Sample App](https://github.com/ubc/flask-sample-app) (a small Flask REST API
@@ -37,7 +37,7 @@ of items in memory, and it already came with a working unittest suite.
 I made two small changes to the app itself (everything else was left as-is):
 
 1. `run.py` now binds to `0.0.0.0` instead of Flask's default `127.0.0.1` (port is
-   configurable via `PORT`). This was necessary — without it, the app isn't reachable from
+   configurable via `PORT`). This was necessary; without it, the app isn't reachable from
    outside the container at all. Running it directly on the host still works the same.
 2. Later on, for the rolling-update demo required by the assignment, I bumped the text
    returned by `/` to include a version marker, and updated the one test that checked that
@@ -91,7 +91,7 @@ the image size. Details in `security/vulnerability-scan.txt`.
 Other than that: `requirements.txt` gets copied and installed before the rest of the source so
 Docker can cache that layer, the app runs as a dedicated non-root user (`appuser`, uid 100),
 only port 5000 is exposed, and there's a `HEALTHCHECK` hitting `GET /`. I also strip
-`pip`/`setuptools`/`wheel` after installing dependencies — they're build-time tools, not needed
+`pip`/`setuptools`/`wheel` after installing dependencies. They're build-time tools, not needed
 once the image is built, and Trivy was flagging vulnerabilities in them too. Final image is
 about 78MB, down from ~198MB with the Debian base.
 
@@ -104,7 +104,7 @@ docker compose logs
 docker compose down
 ```
 
-`compose.yaml` locks things down a bit more for local testing — read-only root filesystem
+`compose.yaml` locks things down a bit more for local testing: read-only root filesystem
 (with `tmpfs` for `/tmp`, since Python occasionally wants to write there), all capabilities
 dropped, `no-new-privileges`. No privileged mode, no Docker socket mount, no host networking.
 
@@ -113,9 +113,9 @@ dropped, `no-new-privileges`. No privileged mode, no Docker socket mount, no hos
 Image: **<https://hub.docker.com/r/rebecca16ouatt/msc-de1-flask-app>**
 
 Tags pushed:
-- `1.0.0` — what's actually deployed in `k8s/deployment.yaml`
-- `latest` — same image as `1.0.0`
-- `1.1.0` — only exists for the rolling-update/rollback demo below; the cluster was rolled back
+- `1.0.0`: what's actually deployed in `k8s/deployment.yaml`
+- `latest`: same image as `1.0.0`
+- `1.1.0`: only exists for the rolling-update/rollback demo below; the cluster was rolled back
   to `1.0.0` afterwards
 
 ```bash
@@ -160,7 +160,7 @@ output is in `evidence/kubernetes/`):
 
 - Both pods land on different worker nodes, and `kubectl get endpoints` shows both of them
   behind the Service.
-- Deleted a pod manually — the Deployment noticed and spun up a replacement on its own.
+- Deleted a pod manually, and the Deployment noticed and spun up a replacement on its own.
 - Scaled from 2 to 3 replicas, checked it, scaled back down to 2.
 - Rolled out `1.1.0` with `kubectl set image`, watched `rollout status`/`rollout history`,
   then rolled back to `1.0.0` with `kubectl rollout undo`.
@@ -185,7 +185,7 @@ docker rmi rebecca16ouatt/msc-de1-flask-app:1.0.0 rebecca16ouatt/msc-de1-flask-a
   just inherits that, and the Kubernetes Deployment explicitly sets `runAsNonRoot: true` with
   `runAsUser: 100` / `runAsGroup: 101` to match.
 - **Alpine + stripped build tools** got the vulnerability count down to a single LOW finding
-  (see `security/vulnerability-scan.txt`) — a Flask CVE about session-cache disclosure that
+  (see `security/vulnerability-scan.txt`): a Flask CVE about session-cache disclosure that
   doesn't actually apply here since the app never touches Flask sessions or cookies. SBOM is in
   `security/sbom.cdx.json` (CycloneDX, generated with Syft).
 - `allowPrivilegeEscalation: false`, all Linux capabilities dropped, and
@@ -196,10 +196,10 @@ docker rmi rebecca16ouatt/msc-de1-flask-app:1.0.0 rebecca16ouatt/msc-de1-flask-a
   cluster resources.
 - The NetworkPolicy documents that only same-namespace traffic should reach the app on port
   5000, but I should flag that `kind`'s default networking (kindnet) doesn't actually enforce
-  NetworkPolicy — you'd need something like Calico or Cilium installed for that to be real
-  enforcement rather than just documentation. Didn't have time to add that on top of everything
-  else.
-- No secrets needed anywhere — the app doesn't use any. The one piece of config (`PORT`) goes
+  NetworkPolicy. You'd need something like Calico or Cilium installed for that to be real
+  enforcement rather than just documentation, and I didn't have time to add that on top of
+  everything else.
+- No secrets needed anywhere: the app doesn't use any. The one piece of config (`PORT`) goes
   through a ConfigMap instead of being hard-coded.
 
 ## Credits
