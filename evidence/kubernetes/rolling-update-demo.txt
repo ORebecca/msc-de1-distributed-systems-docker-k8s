@@ -1,0 +1,24 @@
+=== Before update ===
+(port-forward may have dropped, will retest after)
+=== kubectl set image (rolling update) ===
+deployment.apps/msc-de1-flask-app image updated
+=== rollout status ===
+Waiting for deployment "msc-de1-flask-app" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "msc-de1-flask-app" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "msc-de1-flask-app" rollout to finish: 1 out of 2 new replicas have been updated...
+Waiting for deployment "msc-de1-flask-app" rollout to finish: 1 old replicas are pending termination...
+Waiting for deployment "msc-de1-flask-app" rollout to finish: 1 old replicas are pending termination...
+deployment "msc-de1-flask-app" successfully rolled out
+=== rollout history ===
+deployment.apps/msc-de1-flask-app 
+REVISION  CHANGE-CAUSE
+1         <none>
+2         <none>
+
+=== After rollout: confirmed 2 pods, both on v1.1.0 ===
+NAME                                 READY   STATUS    RESTARTS   AGE   IP           NODE              NOMINATED NODE   READINESS GATES
+msc-de1-flask-app-6b58976dcb-74pbr   1/1     Running   0          87s   10.244.2.5   msc-de1-worker2   <none>           <none>
+msc-de1-flask-app-6b58976dcb-v8w4j   1/1     Running   0          67s   10.244.1.3   msc-de1-worker    <none>           <none>
+=== API response confirms new version ===
+Hello, Flask! (v1.1.0)
+Status: 200
