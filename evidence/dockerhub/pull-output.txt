@@ -1,0 +1,23 @@
+1.0.0: Pulling from rebecca16ouatt/msc-de1-flask-app
+b1d1cdabcb7e: Pulling fs layer
+85c66bd5c18d: Pulling fs layer
+3a394bdb8aa2: Pulling fs layer
+4480588b7ba6: Pulling fs layer
+be4f1a5246f2: Pulling fs layer
+9e15c74523ad: Pulling fs layer
+9e15c74523ad: Already exists
+85c66bd5c18d: Already exists
+be4f1a5246f2: Already exists
+3a394bdb8aa2: Already exists
+b1d1cdabcb7e: Already exists
+4480588b7ba6: Already exists
+9e15c74523ad: Pull complete
+85c66bd5c18d: Pull complete
+4480588b7ba6: Pull complete
+be4f1a5246f2: Pull complete
+3a394bdb8aa2: Pull complete
+b1d1cdabcb7e: Pull complete
+09c3337c4452: Download complete
+Digest: sha256:0f6a1315a0ba74705d11b0423464ac2750abb1f6d6a18cf15854c99ecec9fdba
+Status: Downloaded newer image for rebecca16ouatt/msc-de1-flask-app:1.0.0
+docker.io/rebecca16ouatt/msc-de1-flask-app:1.0.0
