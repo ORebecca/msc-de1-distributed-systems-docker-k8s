@@ -1,0 +1,6 @@
+ Network msc-de1-distributed-systems-docker-k8s_default  Creating
+ Network msc-de1-distributed-systems-docker-k8s_default  Created
+ Container msc-de1-flask-app  Creating
+ Container msc-de1-flask-app  Created
+ Container msc-de1-flask-app  Starting
+ Container msc-de1-flask-app  Started
