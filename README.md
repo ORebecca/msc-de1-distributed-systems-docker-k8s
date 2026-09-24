@@ -179,29 +179,6 @@ docker compose down
 docker rmi rebecca16ouatt/msc-de1-flask-app:1.0.0 rebecca16ouatt/msc-de1-flask-app:latest rebecca16ouatt/msc-de1-flask-app:1.1.0
 ```
 
-## 12. Security choices and limitations I'm aware of
-
-- **Non-root, everywhere.** The Dockerfile switches to `appuser` before the app runs, Compose
-  just inherits that, and the Kubernetes Deployment explicitly sets `runAsNonRoot: true` with
-  `runAsUser: 100` / `runAsGroup: 101` to match.
-- **Alpine + stripped build tools** got the vulnerability count down to a single LOW finding
-  (see `security/vulnerability-scan.txt`): a Flask CVE about session-cache disclosure that
-  doesn't actually apply here since the app never touches Flask sessions or cookies. SBOM is in
-  `security/sbom.cdx.json` (CycloneDX, generated with Syft).
-- `allowPrivilegeEscalation: false`, all Linux capabilities dropped, and
-  `seccompProfile: RuntimeDefault` on the Kubernetes side; `cap_drop: [ALL]` and
-  `no-new-privileges` in Compose.
-- Read-only root filesystem in both Compose and Kubernetes (with a small writable `/tmp`).
-- CPU/memory requests and limits are set on the Deployment so the pod can't eat unbounded
-  cluster resources.
-- The NetworkPolicy documents that only same-namespace traffic should reach the app on port
-  5000, but I should flag that `kind`'s default networking (kindnet) doesn't actually enforce
-  NetworkPolicy. You'd need something like Calico or Cilium installed for that to be real
-  enforcement rather than just documentation, and I didn't have time to add that on top of
-  everything else.
-- No secrets needed anywhere: the app doesn't use any. The one piece of config (`PORT`) goes
-  through a ConfigMap instead of being hard-coded.
-
 ## Credits
 
 Original application by Pan Luo: <https://github.com/ubc/flask-sample-app> (MIT License, see
